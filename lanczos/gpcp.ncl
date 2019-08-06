@@ -19,17 +19,11 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 begin
 ;
   baseDir = "/tamrind/gpcp/data/Daily_Data/"
- 
-
-
-
-
-
-;
+ ;
 ; set parameters the filter
 ;
   dt = 1.0 ;.25 ;days per time step
-  t1 = 12  ;days  (low frequency cutoff, expressed in time domain)
+  t1 = 10  ;days  (low frequency cutoff, expressed in time domain)
   t2 = 2   ;days  (high frequency cutoff, expressed in time domain)
 ;
 ;
@@ -38,21 +32,15 @@ begin
   fca = dt/t1
   fcb = dt/t2
   sigma    = 1.0                           ; Lanczos sigma
-  nWgt     = 121                           ; loose 120 points each end                            
+  nWgt     = 151                           ; loose 120 points each end                            
   wgt      = filwgts_lanczos(nWgt, ihp, fca, fcb, sigma )
 ;  FDAT     =  wgt_runave_n_Wrap(rain,wgt,0,0 )
 ;  delete(rain)
-
-
-
-
-
+  
   first = True
   units = "days since 1970-01-01 00:00:00 0:00"
-  do iy = 2018,2018
- 
 
-
+  do iy = 1998,2015
     startDate = cd_inv_calendar(iy,01,01,0,0,0,units,0)
     endDate   = cd_inv_calendar(iy,12,31,0,0,0,units,0)
     date1 =    startDate  - (nWgt-1)/(2*dt)
@@ -78,8 +66,6 @@ begin
     in   := addfiles (fils, "r")
     ListSetType (in, "join")             ; concatenate or "merge" (default)
     rain := in[:]->precip
-
-
     if (first) then
       fName=fils(0)
       in   := addfile (fName, "r")
@@ -94,8 +80,23 @@ begin
     rain!2    = "lon"
     rain&lat = lat
     rain&lon = lon
-    printVarSummary(rain)
+    ;printVarSummary(rain)
+    rain := rain(:,{-35:35},:)
+    ;printVarSummary(rain)
 
+; some data checks
+    if ( any(ismissing(rain)) ) then
+      print ("data missing")
+      exit
+    end if
+    
+    numM = num(rain.lt. 0.)
+    print (iy +" "  + numM)
+    if (numM .gt. 0 ) then
+      print ("Unexpected < 0 rain value/s found")
+      print ("Abort Code")
+      exit
+    end if      
     
     FDAT   :=  wgt_runave_n_Wrap(rain,wgt,0,0 )
     dimens  =  dimsizes(FDAT)
@@ -105,7 +106,7 @@ begin
     rainBP :=  FDAT({startDate:endDate},:,:)
 
     fAtt               = True            ; assign file attributes
-    fAtt@title         = "2-12 day BP filtered gpcp precip"
+    fAtt@title         = "2-10 day BP filtered gpcp precip"
     fAtt@source_file   =  fils(0)
     fAtt@creation_date = systemfunc ("date")        
     
@@ -114,7 +115,7 @@ begin
     ;exit
 
     setfileoption("nc","format","netcdf4") 
-    outfile = "gpcp_2to12day_" + iy + ".nc"
+    outfile = "gpcp_2to10day_" + iy + ".nc"
     system( "rm " + outfile )
     fout    = addfile (outfile, "c" )
     fileattdef( fout, fAtt )            ; copy file attributes  
