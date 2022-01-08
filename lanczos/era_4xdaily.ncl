@@ -20,30 +20,30 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
 
-  baseDir    =  "/tamrind/eradaily/3D/"
-  baseDirOut = "/tamrind/eradaily/filtered/2to10/"
-  filtprefix = "2-10DayBP_daily"
+  baseDir    =  "/tamrind/era/3D/"
+  baseDirOut = "/tamrind/era/filtered/2to10/"
+  filtprefix = "2-10DayBP_4xdaily"
 
-  variable = "U"
+  variable    = "U"
   variableOut = "UBP"
 
 
 ; set parameters the filter
-  dt = 1.   ;days per time step
-  t1 = 10.  ;days  (low frequency cutoff, expressed in time domain)
-  t2 = 2.   ;days  (high frequency cutoff, expressed in time domain)
+  dt  = .25   ;days per time step
+  t1  = 10.  ;days  (low frequency cutoff, expressed in time domain)
+  t2  = 2.   ;days  (high frequency cutoff, expressed in time domain)
   ihp = 2   ;1=high pass 2=bp
   fca = dt/t1
   fcb = dt/t2
   sigma   = 1.0                           ;Lanczos sigma
-  nWgt    = 121                           
+  nWgt    = 181                           
   wgt     = filwgts_lanczos (nWgt, ihp, fca, fcb, sigma )
 
   
   do iy = 2015,2015
     units = "days since 1900-01-01 00:00:00";
-    startDate = cd_inv_calendar(iy,06,01,0,0,0,units,0)
-    endDate   = cd_inv_calendar(iy,09,30,0,0,0,units,0)
+    startDate = cd_inv_calendar(iy,05,15,0,0,0,units,0)
+    endDate   = cd_inv_calendar(iy,06,15,0,0,0,units,0)
     
 ; number of days to be processed
     NDates = endDate - startDate + 1
@@ -63,10 +63,14 @@ begin
     dateArrayCoded := fspan(date1,date2,tointeger(ndays))
     dateArrayCoded@units = units
     dateArray := cd_calendar(dateArrayCoded,-2)
-    ;print(dateArray) 
+    print(dateArray) 
     fils := baseDir+dateArray+".nc"
     in   := addfiles (fils, "r")
     ListSetType (in, "join")             ; concatenate or "merge" (default)
+    
+    print (fils)
+    exit
+
     dat := in[:]->$variable$(:,:,:,:)  
     delete (dat@time_units)
     delete (dat@time)
