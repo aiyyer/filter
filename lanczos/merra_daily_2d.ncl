@@ -23,7 +23,7 @@ begin
 ; set parameters the filter
   dt = 1.     ;days per time step
   t1 = 10.    ;days  (low frequency cutoff, expressed in time domain)
-  t2 = 2.    ;days  (high frequency cutoff, expressed in time domain)
+  t2 = 2.     ;days  (high frequency cutoff, expressed in time domain)
   ihp = 2     ;1=high pass 2=bp
   fca = dt/t1
   fcb = dt/t2
